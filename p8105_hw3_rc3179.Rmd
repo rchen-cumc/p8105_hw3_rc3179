@@ -33,3 +33,49 @@ library(p8105.datasets)
 data("instacart")
 ```
 
+The Instacart dataset shows that there are a total of `r instacart %>% nrow()` observations/rows across `r instacart %>% pull(order_id) %>% n_distinct()` unique orders placed on Instacart. Each observation or row represents an item order, and there are `r instacart %>% ncol()` variables or columns which include `r instacart %>% tbl_vars()`. These variables include information on when the items were ordered, which user ordered it, how often it has been reordered, along with information on the item itself such as the name or department/aisle it is in. There are `r instacart %>% pull(department) %>% n_distinct()` unique departments from `r instacart %>% pull(department) %>% min()` to `r instacart %>% pull(department) %>% max()`. There are a total of `r instacart %>% pull(product_id) %>% n_distinct()` unique products available, with orders placed between the hours of `r instacart %>% pull(order_hour_of_day) %>% min()` and `r instacart %>% pull(order_hour_of_day) %>% max()`
+
+
+```{r}
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n_orders = n()) %>% 
+  arrange(desc(n_orders))
+```
+There are a total of `r instacart %>% pull(aisle) %>% n_distinct()` aisles and fresh vegetables and fresh fruits, respectively, are the top 2 aisles which have the most items ordered from them.
+
+```{r}
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n_orders = n()) %>% 
+  filter(n_orders > 10000) %>% 
+  ggplot(aes(x = aisle, y = n_orders)) +
+  geom_col() +
+  labs(title = "Number of items ordered in each aisle", caption = "(min 10000 items), arranged alphabetically") +
+  theme(axis.text.x = element_text(angle=90))
+```
+
+Table of 3 most popular items in aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”
+```{r}
+instacart %>% 
+  filter(aisle == 'baking ingredients' | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(n_orders = n()) %>% 
+  arrange(desc(n_orders)) %>% 
+  mutate(rank = rank(desc(n_orders))) %>% 
+  filter(rank<=3) %>% 
+  knitr::kable()
+```
+
+```{r}
+instacart %>% 
+  filter(product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_hour_of_day = mean(order_hour_of_day)) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hour_of_day
+  ) %>% 
+  knitr::kable()
+```
+
