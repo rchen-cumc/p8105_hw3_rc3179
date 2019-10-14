@@ -158,17 +158,28 @@ accel_data =
   )
 ```
 
-In the accelerometer dataset, there are a total of total of `r accel_data %>% nrow()` rows/day where each row represents a day of activities/accelerometer data. There is information on the week, day, day of the week, along with data on up to 1440 activities, for a total of `r accel_data %>% ncol()` variables, with the addition of the weekday vs weekend variable.  
+In the accelerometer dataset, there are a total of total of `r accel_data %>% nrow()` rows/day where each row represents a day of activities/accelerometer data. There is information on the week, day, day of the week, along with data on activities for each minute of the day, for a total of 1440 activities, and a total of `r accel_data %>% ncol()` variables, with the addition of the weekday vs weekend variable.  
 
 ```{r}
-#accel_data %>% 
-#  group_by(day) %>% 
-#  summarize(sum = rowSums[4:1443])
-```
-```{r}
-#accel_data %>% 
-#  group_by(day)
-#  ggplot(aes(x = day_id, y = sum, color = day)) +
-#    geom_point()
+accel_data %>% 
+  mutate(
+    sum = rowSums(select(accel_data, starts_with("activity")))
+    ) %>% 
+  select(week, day_id, day, weekday_v_weekend, sum) %>% 
+  knitr::kable()
 ```
 
+There appear to be some days, usually on weekends, when the total activity is very low or no data is tracked. For example, there are two Saturdays with a total of 1440, which essentially represents the baseline of 1 for every minute so likely no activity was tracked or the patient was sedentary for the entire day (but unlikely to have absolutely no activity).
+
+```{r}
+accel_data %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "time_point",
+    values_to = "activity"
+  ) %>% 
+  ggplot(aes(x = time_point, y = activity, color = day)) +
+  geom_point(alpha = .5) + 
+  geom_smooth(se = FALSE)
+```
+There appear to be a dip in activity in the early-middle part of each day, along with a spike in activity soon before this period in the morning, which is the time of the day with the most activity and the most peaks. There is another region of higher activity in what might be the late afternoon/early evening.
